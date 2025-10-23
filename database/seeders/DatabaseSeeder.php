@@ -16,18 +16,28 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Test',
-            'lastname' => 'User',
-            'phone' => '12345678',
-            'email' => 'test@example.com',
-            'role' => true,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test',
+                'lastname' => 'User',
+                'phone' => '12345678',
+                'role' => true,
+            ]
+        );
 
-        $this->call([
-            ProductCategorySeeder::class,
-            ProductSeeder::class,
-            PaymentMethodSeeder::class,
-        ]);
+        if (ProductCategory::count() === 0) {
+            $this->call(ProductCategorySeeder::class);
+        }
+
+        if (Product::count() === 0) {
+            $this->call(ProductSeeder::class);
+        }
+
+        if (PaymentMethod::count() === 0) {
+            $this->call(PaymentMethodSeeder::class);
+        }
+
+        $this->command->info('Database seeded successfully!');
     }
 }
