@@ -1,0 +1,74 @@
+{
+  "menu": [
+    {
+      "url": "dashboard",
+      "name": "Dashboard",
+      "icon": "menu-icon icon-base ri ri-bar-chart-box-ai-line",
+      "slug": "dashboard",
+      "submenu": [
+        {
+          "url": "dashboard",
+          "name": "Analitica",
+          "slug": "dashboard"
+        }
+      ]
+    },
+    {
+      "menuHeader": "Administrativo"
+    },
+    {
+      "name": "Usuarios",
+      "icon": "menu-icon icon-base ri ri-account-circle-fill",
+      "slug": "users",
+      "submenu": [
+        {
+          "url": "users",
+          "name": "Ver Usuarios",
+          "slug": "users"
+        }
+      ]
+    },
+    {
+      "menuHeader": "Comercial"
+    },
+    {
+      "name": "Productos",
+      "icon": "menu-icon icon-base ri ri-box-3-fill",
+      "slug": "products",
+      "submenu": [
+        {
+          "url": "products",
+          "name": "Ver Productos",
+          "slug": "products"
+        }
+      ]
+    },
+    {
+      "name": "Categorias de Productos",
+      "icon": "menu-icon icon-base ri ri-checkbox-multiple-blank-fill",
+      "slug": "categories",
+      "submenu": [
+        {
+          "url": "categories",
+          "name": "Ver Categorias",
+          "slug": "categories"
+        }
+      ]
+    },
+    {
+      "menuHeader": "Ventas"
+    },
+    {
+      "name": "Ordenes",
+      "icon": "menu-icon icon-base ri ri-list-ordered",
+      "slug": "orders",
+      "submenu": [
+        {
+          "url": "orders",
+          "name": "Ver Ordenes",
+          "slug": "orders"
+        }
+      ]
+    }
+  ]
+}
