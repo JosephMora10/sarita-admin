@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
                 'lastname' => 'User',
                 'phone' => '12345678',
                 'role' => true,
+                'password' => 'password',
             ]
         );
 

@@ -1,6 +1,6 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Users - Users')
+@section('title', 'Usuarios')
 
 @section('content')
 

@@ -1,6 +1,6 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Dashboard - Ventas')
+@section('title', 'Dashboard')
 
 @section('vendor-style')
 @vite(['resources/assets/vendor/libs/apex-charts/apex-charts.scss'])
@@ -12,7 +12,6 @@
 
 @section('content')
 <div class="row gy-6">
-    <!-- Filtros de Fecha -->
     <div class="col-12">
         <div class="card">
             <div class="card-body">
@@ -40,8 +39,7 @@
         </div>
     </div>
 
-    <!-- Estadísticas Principales -->
-    <div class="col-lg-3 col-md-6">
+    <div class="col-lg-6 col-md-6">
         <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -59,25 +57,7 @@
         </div>
     </div>
 
-    <div class="col-lg-3 col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="avatar">
-                        <div class="avatar-initial bg-success rounded shadow-xs">
-                            <i class="ri ri-list-ordered-2 h-75 w-75"></i>
-                        </div>
-                    </div>
-                    <div class="ms-3">
-                        <p class="mb-0">Órdenes</p>
-                        <h4 class="mb-0">{{ number_format($totalOrders) }}</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-lg-3 col-md-6">
+    <div class="col-lg-6 col-md-6">
         <div class="card h-100">
             <div class="card-body">
                 <div class="d-flex align-items-center">
@@ -95,58 +75,30 @@
         </div>
     </div>
 
-    <div class="col-lg-3 col-md-6">
-        <div class="card h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="avatar">
-                        <div class="avatar-initial bg-info rounded shadow-xs">
-                            <i class="ri ri-arrow-left-right-line h-75 w-75"></i>
-                        </div>
-                    </div>
-                    <div class="ms-3">
-                        <p class="mb-0">Promedio por Orden</p>
-                        <h4 class="mb-0">Q {{ number_format($averageOrder, 2) }}</h4>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Gráfica de Ventas por Día -->
-    <div class="col-lg-8">
+    <div class="col-lg-6">
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">Ventas Diarias</h5>
                 <p class="text-muted mb-0">Del {{ \Carbon\Carbon::parse($startDate)->format('d/m/Y') }} al {{ \Carbon\Carbon::parse($endDate)->format('d/m/Y') }}</p>
             </div>
             <div class="card-body">
-                <div id="salesChart"></div>
+                <div id="salesByDayChart"></div>
             </div>
         </div>
     </div>
 
-    <!-- Ventas por Método de Pago -->
-    <div class="col-lg-4">
-        <div class="card h-100">
+    <div class="col-lg-6">
+        <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Métodos de Pago</h5>
+                <h5 class="mb-0">Ventas por Mes</h5>
+                <p class="text-muted mb-0">Comparativo mensual</p>
             </div>
             <div class="card-body">
-                @foreach($salesByPaymentMethod as $method)
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div>
-                        <h6 class="mb-0">{{ $method->method }}</h6>
-                        <small class="text-muted">{{ $method->total_orders }} órdenes</small>
-                    </div>
-                    <h6 class="mb-0 text-success">Q {{ number_format($method->total_amount, 2) }}</h6>
-                </div>
-                @endforeach
+                <div id="salesByMonthChart"></div>
             </div>
         </div>
     </div>
 
-    <!-- Top Productos -->
     <div class="col-lg-6">
         <div class="card">
             <div class="card-header">
@@ -179,7 +131,6 @@
         </div>
     </div>
 
-    <!-- Top Vendedores -->
     <div class="col-lg-6">
         <div class="card">
             <div class="card-header">
@@ -191,16 +142,16 @@
                         <thead>
                             <tr>
                                 <th>Vendedor</th>
-                                <th class="text-center">Órdenes</th>
+                                <th class="text-center">Cantidad</th>
                                 <th class="text-end">Total</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($topSellers as $seller)
                             <tr>
-                                <td>{{ $seller->name }} {{ $seller->last_name }}</td>
+                                <td>{{ $seller->seller_name }}</td>
                                 <td class="text-center">
-                                    <span class="badge bg-label-success">{{ $seller->total_orders }}</span>
+                                    <span class="badge bg-label-success">{{ $seller->total_quantity }}</span>
                                 </td>
                                 <td class="text-end">Q {{ number_format($seller->total_sales, 2) }}</td>
                             </tr>
@@ -212,12 +163,10 @@
         </div>
     </div>
 
-    <!-- Últimas Órdenes -->
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Últimas Órdenes</h5>
-                <a href="{{ route('orders') }}" class="btn btn-sm btn-danger">Ver Todas</a>
+                <h5 class="mb-0">Últimas Ventas</h5>
             </div>
             <div class="table-responsive">
                 <table class="table">
@@ -225,27 +174,23 @@
                         <tr>
                             <th>ID</th>
                             <th>Fecha</th>
+                            <th>Producto</th>
                             <th>Vendedor</th>
-                            <th>Método de Pago</th>
-                            <th class="text-center">Items</th>
+                            <th class="text-center">Cantidad</th>
+                            <th class="text-end">Precio</th>
                             <th class="text-end">Total</th>
-                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($recentOrders as $order)
+                        @foreach($recentSales as $sale)
                         <tr>
-                            <td><strong>#{{ $order->id }}</strong></td>
-                            <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                            <td>{{ $order->seller->name }} {{ $order->seller->last_name }}</td>
-                            <td>{{ $order->paymentMethod->description }}</td>
-                            <td class="text-center">{{ $order->items_qty }}</td>
-                            <td class="text-end"><strong>Q {{ number_format($order->total, 2) }}</strong></td>
-                            <td class="text-center">
-                                <a href="{{ route('orders.show', $order->id) }}" class="btn btn-sm btn-icon btn-text-secondary">
-                                    <i class="ri ri-eye-line h-75 w-75"></i>
-                                </a>
-                            </td>
+                            <td><strong>#{{ $sale->id }}</strong></td>
+                            <td>{{ \Carbon\Carbon::parse($sale->created_at)->format('d/m/Y H:i') }}</td>
+                            <td>{{ $sale->product->description }}</td>
+                            <td>{{ $sale->seller->name }} {{ $sale->seller->last_name }}</td>
+                            <td class="text-center">{{ $sale->items_qty }}</td>
+                            <td class="text-end">Q {{ number_format($sale->product_price, 2) }}</td>
+                            <td class="text-end"><strong>Q {{ number_format($sale->product_price * $sale->items_qty, 2) }}</strong></td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -259,37 +204,44 @@
 @section('page-script')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Datos para la gráfica
-    const salesData = @json($salesByDay);
+    const salesByDay = @json($salesByDay);
     
-    const dates = salesData.map(item => item.date);
-    const totals = salesData.map(item => parseFloat(item.total));
-    const orders = salesData.map(item => parseInt(item.orders_count));
+    const dates = salesByDay.map(item => item.date);
+    const totals = salesByDay.map(item => parseFloat(item.total_sales));
+    const quantities = salesByDay.map(item => parseInt(item.total_quantity));
 
-    // Configuración de la gráfica
-    const options = {
+    const dayChartOptions = {
         series: [{
-            name: 'Ventas (Q)',
-            type: 'column',
+            name: 'Total Ventas',
             data: totals
-        }, {
-            name: 'Órdenes',
-            type: 'line',
-            data: orders
         }],
         chart: {
             height: 350,
-            type: 'line',
+            type: 'bar',
             toolbar: {
-                show: false
+                show: true
             }
         },
-        stroke: {
-            width: [0, 4]
+        plotOptions: {
+            bar: {
+                horizontal: false,
+                columnWidth: '50%',
+                endingShape: 'rounded',
+                dataLabels: {
+                    position: 'top'
+                }
+            }
         },
         dataLabels: {
             enabled: true,
-            enabledOnSeries: [1]
+            formatter: function(val) {
+                return 'Q ' + val.toFixed(2);
+            },
+            offsetY: -20,
+            style: {
+                fontSize: '12px',
+                colors: ["#304758"]
+            }
         },
         labels: dates,
         xaxis: {
@@ -298,21 +250,101 @@ document.addEventListener('DOMContentLoaded', function() {
                 format: 'dd/MM'
             }
         },
+        yaxis: {
+            title: {
+                text: 'Ventas (Q)',
+            },
+            labels: {
+                formatter: function(val) {
+                    return 'Q ' + val.toFixed(2);
+                }
+            }
+        },
+        colors: ['#7367F0'],
+        tooltip: {
+            y: {
+                formatter: function(val, { seriesIndex, dataPointIndex, w }) {
+                    return 'Q ' + val.toFixed(2) + ' (' + quantities[dataPointIndex] + ' productos)';
+                }
+            }
+        }
+    };
+
+    const dayChart = new ApexCharts(document.querySelector("#salesByDayChart"), dayChartOptions);
+    dayChart.render();
+
+    const salesByMonth = @json($salesByMonth);
+    
+    const months = salesByMonth.map(item => item.month);
+    const monthlyTotals = salesByMonth.map(item => parseFloat(item.total_sales));
+    const monthlyQuantities = salesByMonth.map(item => parseInt(item.total_quantity));
+
+    const monthChartOptions = {
+        series: [{
+            name: 'Ventas (Q)',
+            type: 'column',
+            data: monthlyTotals
+        }, {
+            name: 'Cantidad Vendida',
+            type: 'line',
+            data: monthlyQuantities
+        }],
+        chart: {
+            height: 350,
+            type: 'line',
+            toolbar: {
+                show: true
+            }
+        },
+        stroke: {
+            width: [0, 4]
+        },
+        dataLabels: {
+            enabled: true,
+            enabledOnSeries: [0, 1]
+        },
+        labels: months,
+        xaxis: {
+            type: 'category',
+            labels: {
+                formatter: function(val) {
+                    if (!val) return '';
+                    const parts = val.split('-');
+                    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
+                                      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                    return monthNames[parseInt(parts[1]) - 1] + ' ' + parts[0];
+                }
+            }
+        },
         yaxis: [{
             title: {
                 text: 'Ventas (Q)',
             },
+            labels: {
+                formatter: function(val) {
+                    return 'Q ' + val.toFixed(2);
+                }
+            }
         }, {
             opposite: true,
             title: {
-                text: 'Órdenes'
+                text: 'Cantidad'
             }
         }],
+        tooltip: {
+            shared: true,
+            intersect: false,
+            y: {
+                formatter: function(val) {
+                    return val.toFixed(0);
+                }
+            }
+        },
         colors: ['#7367F0', '#28C76F']
     };
 
-    const chart = new ApexCharts(document.querySelector("#salesChart"), options);
-    chart.render();
+    const monthChart = new ApexCharts(document.querySelector("#salesByMonthChart"), monthChartOptions);
+    monthChart.render();
 });
 </script>
 @endsection

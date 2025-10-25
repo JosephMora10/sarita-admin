@@ -1,18 +1,22 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\dashboard\Analytics;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductCategoryController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\Dashboard;
+use App\Http\Controllers\DailySaleController;
+use App\Http\Controllers\DashboardController;
 
-Route::redirect('/', 'login');
+// Ruta raíz con middleware de redirección
+Route::get('/', function () {
+    return redirect('/login');
+})->middleware('redirect.role');
 
-Route::middleware('auth')->group(function () {
+// Rutas solo para administradores (role = 1)
+Route::middleware(['auth', 'can:access-admin'])->group(function () {
+
     //Dashboard
-    Route::get('/dashboard', [Dashboard::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     //Users
     Route::get('/users', [UserController::class, 'index'])->name('users');
@@ -31,13 +35,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/categories', [ProductCategoryController::class, 'store'])->name('categories.store');
     Route::put('/categories/{id}', [ProductCategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{id}', [ProductCategoryController::class, 'destroy'])->name('categories.destroy');
+});
 
-    //Orders
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders');
-    Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
-    Route::get('/orders/{id}', [OrderController::class, 'show'])->name('orders.show');
-    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
-    Route::put('/orders/{id}', [OrderController::class, 'update'])->name('orders.update');
-    Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
-    
+// Rutas para todos los usuarios autenticados
+Route::middleware(['auth'])->group(function () {
+    //Sales
+    Route::get('/sales', [DailySaleController::class, 'index'])->name('sales');
+    Route::post('/sales', [DailySaleController::class, 'store'])->name('sales.store');
+    Route::get('/sales/create', [DailySaleController::class, 'create'])->name('sales.create');
+    Route::put('/sales/{id}', [DailySaleController::class, 'update'])->name('sales.update');
+    Route::delete('/sales/{id}', [DailySaleController::class, 'destroy'])->name('sales.destroy');
 });
