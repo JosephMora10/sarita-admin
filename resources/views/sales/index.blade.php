@@ -1,12 +1,12 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Ventas')
+@section('title', 'Ordenes')
 
 @section('content')
 
 <div class="card">
     <div class="card-header d-flex justify-content-between">
-        <h5>Ventas</h5>
+        <h5>Ordenes</h5>
         <a href="{{ route('sales.create') }}" class="btn btn-danger">Crear Venta</a>
     </div>
     
@@ -24,8 +24,7 @@
                     <tr class="text-center align-middle">
                         <th>ID</th>
                         <th>Cantidad de Productos</th>
-                        <th>Producto</th>
-                        <th>Precio</th>
+                        <th>Total</th>
                         <th>Vendedor</th>
                         <th>Fecha</th>
                         <th>Acciones</th>
@@ -36,8 +35,7 @@
                         <tr class="text-center align-middle">
                             <td><strong>#{{ $sale->id }}</strong></td>
                             <td>{{ $sale->items_qty }}</td>
-                            <td>{{ $sale->product->description }}</td>
-                            <td><strong>Q {{ number_format($sale->product_price * $sale->items_qty, 2) }}</strong></td>
+                            <td>Q{{ $sale->total_amount }}</td>
                             <td>{{ $sale->seller->name . ' ' . $sale->seller->last_name }}</td>
                             <td>{{ $sale->created_at->format('d/m/Y H:i') }}</td>
                             <td>
@@ -46,10 +44,19 @@
                                         <i class="icon-base ri ri-more-2-line icon-18px"></i>
                                     </button>
                                     <div class="dropdown-menu">
-                                        <a href="{{ route('sales.destroy', $sale->id) }}" class="dropdown-item">
-                                            <i class="icon-base ri ri-delete-bin-line icon-18px me-1"></i>
-                                            Eliminar
+                                        <a href="{{ route('sales.show', $sale->id) }}" class="dropdown-item">
+                                            <i class="icon-base ri ri-eye-line icon-18px me-1"></i>
+                                            Ver
                                         </a>
+                                        <form action="{{ route('sales.destroy', $sale->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="dropdown-item"
+                                                onclick="return confirm('¿Estás seguro de eliminar esta venta?')">
+                                                <i class="icon-base ri ri-delete-bin-line icon-18px me-1"></i>
+                                                Eliminar
+                                            </button>
+                                        </form>
                                     </div>
                                 </div>
                             </td>

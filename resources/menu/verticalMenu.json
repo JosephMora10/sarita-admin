@@ -59,13 +59,13 @@
       "menuHeader": "Ventas"
     },
     {
-      "name": "Ventas",
+      "name": "Ordenes",
       "icon": "menu-icon icon-base ri ri-list-ordered",
       "slug": "sales",
       "submenu": [
         {
           "url": "sales",
-          "name": "Ver Ventas",
+          "name": "Ver Ordenes",
           "slug": "sales"
         }
       ]

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DailySale extends Model
 {
@@ -10,31 +12,30 @@ class DailySale extends Model
 
     protected $fillable = [
         'items_qty',
-        'product_id',
-        'product_price',
+        'total_amount',
         'seller_id',
-        'created_at',
-        'updated_at',
+        'is_completed',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'product_price' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'is_completed' => 'boolean',
     ];
 
-    public function product()
+    public function details(): HasMany
     {
-        return $this->belongsTo(Product::class, 'product_id');
+        return $this->hasMany(DailySaleDetail::class);
     }
 
-    public function seller()
+    public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id');
     }
 
-    public function paymentMethod()
+    public function calculateTotal(): float
     {
-        return $this->belongsTo(PaymentMethod::class, 'payment_method_id');
+        return $this->details->sum('subtotal');
     }
 }

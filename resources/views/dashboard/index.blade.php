@@ -8,6 +8,86 @@
 
 @section('vendor-script')
 @vite(['resources/assets/vendor/libs/apex-charts/apexcharts.js'])
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const salesByDayData = @json($salesByDay);
+        const salesByDayOptions = {
+            chart: {
+                type: 'line',
+                height: 350,
+                toolbar: { show: false }
+            },
+            series: [{
+                name: 'Ventas',
+                data: salesByDayData.map(item => item.total_sales)
+            }],
+            xaxis: {
+                categories: salesByDayData.map(item => new Date(item.date).toLocaleDateString('es-ES', {day: '2-digit', month: 'short'}))
+            },
+            yaxis: {
+                labels: {
+                    formatter: function(value) {
+                        return 'Q' + value.toLocaleString('es-GT');
+                    }
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(value) {
+                        return 'Q' + value.toLocaleString('es-GT', {minimumFractionDigits: 2});
+                    }
+                }
+            }
+        };
+        const salesByDayChart = new ApexCharts(document.querySelector("#salesByDayChart"), salesByDayOptions);
+        salesByDayChart.render();
+
+        const salesByMonthData = @json($salesByMonth);
+        const salesByMonthOptions = {
+            chart: {
+                type: 'bar',
+                height: 350,
+                toolbar: { show: false }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded'
+                },
+            },
+            dataLabels: {
+                enabled: false
+            },
+            series: [{
+                name: 'Ventas',
+                data: salesByMonthData.map(item => item.total_sales)
+            }],
+            xaxis: {
+                categories: salesByMonthData.map(item => {
+                    const [year, month] = item.month.split('-');
+                    return new Date(year, month - 1).toLocaleDateString('es-ES', {month: 'long', year: 'numeric'});
+                })
+            },
+            yaxis: {
+                labels: {
+                    formatter: function(value) {
+                        return 'Q' + value.toLocaleString('es-GT');
+                    }
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function(value) {
+                        return 'Q' + value.toLocaleString('es-GT', {minimumFractionDigits: 2});
+                    }
+                }
+            }
+        };
+        const salesByMonthChart = new ApexCharts(document.querySelector("#salesByMonthChart"), salesByMonthOptions);
+        salesByMonthChart.render();
+    });
+</script>
 @endsection
 
 @section('content')
@@ -169,32 +249,40 @@
                 <h5 class="mb-0">Últimas Ventas</h5>
             </div>
             <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Fecha</th>
-                            <th>Producto</th>
-                            <th>Vendedor</th>
-                            <th class="text-center">Cantidad</th>
-                            <th class="text-end">Precio</th>
-                            <th class="text-end">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($recentSales as $sale)
-                        <tr>
-                            <td><strong>#{{ $sale->id }}</strong></td>
-                            <td>{{ \Carbon\Carbon::parse($sale->created_at)->format('d/m/Y H:i') }}</td>
-                            <td>{{ $sale->product->description }}</td>
-                            <td>{{ $sale->seller->name }} {{ $sale->seller->last_name }}</td>
-                            <td class="text-center">{{ $sale->items_qty }}</td>
-                            <td class="text-end">Q {{ number_format($sale->product_price, 2) }}</td>
-                            <td class="text-end"><strong>Q {{ number_format($sale->product_price * $sale->items_qty, 2) }}</strong></td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Productos</th>
+                                <th>Vendedor</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($recentSales as $sale)
+                            <tr>
+                                <td><strong>#{{ $sale->id }}</strong></td>
+                                <td>{{ \Carbon\Carbon::parse($sale->created_at)->format('d/m/Y H:i') }}</td>
+                                <td>{{ $sale->details->count() }} {{ Str::plural('producto', $sale->details->count()) }}</td>
+                                <td>{{ $sale->seller->name }} {{ $sale->seller->lastname }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-label-primary">{{ $sale->details->sum('quantity') }}</span>
+                                </td>
+                                <td class="text-end fw-bold">Q {{ number_format($sale->total_amount, 2) }}</td>
+                                <td class="text-end">
+                                    <a href="{{ route('sales.show', $sale->id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="ri-eye-line"></i> Ver Orden
+                                    </a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

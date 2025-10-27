@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\Models\PaymentMethod;
 use App\Models\DailySale;
+use App\Models\DailySaleDetail;
 
 class DailySaleController extends Controller
 {
@@ -57,7 +58,9 @@ class DailySaleController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $sales = DailySaleDetail::with('product')->where('daily_sale_id', $id)->get();
+        $sale = DailySale::find($id);
+        return view('sales.show', compact('sales', 'sale'));
     }
 
     /**
@@ -81,6 +84,8 @@ class DailySaleController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $sale = DailySale::where('id', $id)->first();
+        $sale->delete();
+        return redirect()->back()->with('success', 'Venta eliminada exitosamente');
     }
 }

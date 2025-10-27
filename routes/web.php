@@ -39,10 +39,14 @@ Route::middleware(['auth', 'can:access-admin'])->group(function () {
 
 // Rutas para todos los usuarios autenticados
 Route::middleware(['auth'])->group(function () {
-    //Sales
-    Route::get('/sales', [DailySaleController::class, 'index'])->name('sales');
-    Route::post('/sales', [DailySaleController::class, 'store'])->name('sales.store');
-    Route::get('/sales/create', [DailySaleController::class, 'create'])->name('sales.create');
-    Route::put('/sales/{id}', [DailySaleController::class, 'update'])->name('sales.update');
-    Route::delete('/sales/{id}', [DailySaleController::class, 'destroy'])->name('sales.destroy');
+    // Sales
+    Route::prefix('sales')->group(function () {
+        Route::get('/', [DailySaleController::class, 'index'])->name('sales.index');
+        Route::get('/create', [DailySaleController::class, 'create'])->name('sales.create');
+        Route::post('/', [DailySaleController::class, 'store'])->name('sales.store');
+        Route::post('/finalize', [DailySaleController::class, 'finalizeOrder'])->name('sales.finalize');
+        Route::get('/{id}', [DailySaleController::class, 'show'])->name('sales.show');
+        Route::put('/{id}', [DailySaleController::class, 'update'])->name('sales.update');
+        Route::delete('/{id}', [DailySaleController::class, 'destroy'])->name('sales.destroy');
+    });
 });

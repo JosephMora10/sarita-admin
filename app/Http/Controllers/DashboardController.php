@@ -14,35 +14,73 @@ class DashboardController extends Controller
         $startDate = $request->input('start_date', Carbon::now()->firstOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->format('Y-m-d'));
 
-        $totalSales = DailySale::whereBetween('daily_sales.created_at', [$startDate, $endDate])
-            ->sum(DB::raw('product_price * items_qty'));
+        $totalSales = DailySale::where('is_completed', true)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('total_amount');
 
-        $totalProducts = DailySale::whereBetween('daily_sales.created_at', [$startDate, $endDate])
-            ->sum('items_qty');
-
-        $salesByDay = DailySale::select(
-                DB::raw('DATE(daily_sales.created_at) as date'),
-                DB::raw('SUM(daily_sales.product_price * daily_sales.items_qty) as total_sales'),
-                DB::raw('SUM(daily_sales.items_qty) as total_quantity')
-            )
+        $totalProducts = DB::table('daily_sale_details')
+            ->join('daily_sales', 'daily_sale_details.daily_sale_id', '=', 'daily_sales.id')
+            ->where('daily_sales.is_completed', true)
             ->whereBetween('daily_sales.created_at', [$startDate, $endDate])
-            ->groupBy(DB::raw('DATE(daily_sales.created_at)'))
+            ->sum('daily_sale_details.quantity');
+
+        $salesByDay = DB::table('daily_sales')
+            ->select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('SUM(total_amount) as total_sales')
+            )
+            ->where('is_completed', true)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy(DB::raw('DATE(created_at)'))
             ->orderBy('date')
             ->get();
+
+        $quantitiesByDay = DB::table('daily_sale_details')
+            ->select(
+                DB::raw('DATE(daily_sales.created_at) as date'),
+                DB::raw('SUM(daily_sale_details.quantity) as total_quantity')
+            )
+            ->join('daily_sales', 'daily_sale_details.daily_sale_id', '=', 'daily_sales.id')
+            ->where('daily_sales.is_completed', true)
+            ->whereBetween('daily_sales.created_at', [$startDate, $endDate])
+            ->groupBy(DB::raw('DATE(daily_sales.created_at)'))
+            ->pluck('total_quantity', 'date');
+
+        $salesByDay = $salesByDay->map(function($item) use ($quantitiesByDay) {
+            $item->total_quantity = $quantitiesByDay->get($item->date, 0);
+            return $item;
+        });
 
         $start = Carbon::parse($startDate)->startOfMonth();
         $end = Carbon::parse($endDate)->endOfMonth();
         
-        $actualSales = DailySale::select(
-                DB::raw('DATE_FORMAT(daily_sales.created_at, "%Y-%m") as month'),
-                DB::raw('SUM(daily_sales.product_price * daily_sales.items_qty) as total_sales'),
-                DB::raw('SUM(daily_sales.items_qty) as total_quantity')
+        $actualSales = DB::table('daily_sales')
+            ->select(
+                DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
+                DB::raw('SUM(total_amount) as total_sales')
             )
-            ->whereBetween('daily_sales.created_at', [$start->format('Y-m-d'), $end->format('Y-m-d')])
-            ->groupBy(DB::raw('DATE_FORMAT(daily_sales.created_at, "%Y-%m")'))
+            ->where('is_completed', true)
+            ->whereBetween('created_at', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+            ->groupBy(DB::raw('DATE_FORMAT(created_at, "%Y-%m")'))
             ->orderBy('month')
             ->get()
             ->keyBy('month');
+
+        $quantitiesByMonth = DB::table('daily_sale_details')
+            ->select(
+                DB::raw('DATE_FORMAT(daily_sales.created_at, "%Y-%m") as month'),
+                DB::raw('SUM(daily_sale_details.quantity) as total_quantity')
+            )
+            ->join('daily_sales', 'daily_sale_details.daily_sale_id', '=', 'daily_sales.id')
+            ->where('daily_sales.is_completed', true)
+            ->whereBetween('daily_sales.created_at', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+            ->groupBy(DB::raw('DATE_FORMAT(daily_sales.created_at, "%Y-%m")'))
+            ->pluck('total_quantity', 'month');
+
+        $actualSales = $actualSales->map(function($item) use ($quantitiesByMonth) {
+            $item->total_quantity = $quantitiesByMonth->get($item->month, 0);
+            return $item;
+        });
         
         $salesByMonth = collect();
         $currentMonth = $start->copy();
@@ -67,35 +105,58 @@ class DashboardController extends Controller
             $currentMonth->addMonth();
         }
 
-        $topProducts = DailySale::select(
-                'daily_sales.product_id',
+        $topProducts = DB::table('daily_sale_details')
+            ->select(
+                'products.id as product_id',
                 'products.description as product_name',
-                DB::raw('SUM(daily_sales.items_qty) as total_quantity'),
-                DB::raw('SUM(daily_sales.product_price * daily_sales.items_qty) as total_sales')
+                DB::raw('SUM(daily_sale_details.quantity) as total_quantity'),
+                DB::raw('SUM(daily_sale_details.subtotal) as total_sales')
             )
-            ->join('products', 'daily_sales.product_id', '=', 'products.id')
+            ->join('products', 'daily_sale_details.product_id', '=', 'products.id')
+            ->join('daily_sales', 'daily_sale_details.daily_sale_id', '=', 'daily_sales.id')
+            ->where('daily_sales.is_completed', true)
             ->whereBetween('daily_sales.created_at', [$startDate, $endDate])
-            ->groupBy('daily_sales.product_id', 'products.description')
+            ->groupBy('products.id', 'products.description')
             ->orderBy('total_sales', 'desc')
             ->limit(10)
             ->get();
 
-        $topSellers = DailySale::select(
-                'daily_sales.seller_id',
+        $topSellers = DB::table('daily_sales')
+            ->select(
+                'users.id as seller_id',
+                'users.name',
+                'users.lastname',
                 DB::raw('CONCAT(users.name, " ", users.lastname) as seller_name'),
-                DB::raw('SUM(daily_sales.items_qty) as total_quantity'),
-                DB::raw('SUM(daily_sales.product_price * daily_sales.items_qty) as total_sales')
+                DB::raw('SUM(daily_sales.total_amount) as total_sales')
             )
             ->join('users', 'daily_sales.seller_id', '=', 'users.id')
+            ->where('daily_sales.is_completed', true)
             ->whereBetween('daily_sales.created_at', [$startDate, $endDate])
-            ->groupBy('daily_sales.seller_id', 'users.name', 'users.lastname')
+            ->groupBy('users.id', 'users.name', 'users.lastname')
             ->orderBy('total_sales', 'desc')
             ->limit(10)
             ->get();
 
-        $recentSales = DailySale::with(['product', 'seller'])
+        $quantitiesBySeller = DB::table('daily_sale_details')
+            ->select(
+                'daily_sales.seller_id',
+                DB::raw('SUM(daily_sale_details.quantity) as total_quantity')
+            )
+            ->join('daily_sales', 'daily_sale_details.daily_sale_id', '=', 'daily_sales.id')
+            ->where('daily_sales.is_completed', true)
             ->whereBetween('daily_sales.created_at', [$startDate, $endDate])
-            ->orderBy('daily_sales.created_at', 'desc')
+            ->groupBy('daily_sales.seller_id')
+            ->pluck('total_quantity', 'seller_id');
+
+        $topSellers = $topSellers->map(function($seller) use ($quantitiesBySeller) {
+            $seller->total_quantity = $quantitiesBySeller->get($seller->seller_id, 0);
+            return $seller;
+        });
+
+        $recentSales = DailySale::with(['details.product', 'seller'])
+            ->where('is_completed', true)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
         
