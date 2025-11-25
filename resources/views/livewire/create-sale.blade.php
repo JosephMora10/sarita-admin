@@ -1,23 +1,23 @@
 <div>
     @if(count($cart) > 0)
-        <div class="card mb-4 border-0 shadow-sm">
-            <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
-                <div>
-                    <h5 class="mb-1 fw-bold">Resumen de la Orden</h5>
-                    <p class="mb-0 text-muted">
+        <div class="card mb-3 border-0 shadow-sm bg-gradient">
+            <div class="card-body d-flex justify-content-between align-items-center flex-wrap py-3">
+                <div class="text-white">
+                    <h6 class="mb-1 fw-semibold text-white">Resumen de la Orden</h6>
+                    <p class="mb-0 small opacity-75 text-white">
                         <strong>{{ count($cart) }}</strong> productos agregados
                     </p>
                 </div>
 
-                <div class="d-flex align-items-center">
-                    <h5 class="mb-0 me-4">
-                        Total: <span class="text-danger fw-bold">Q{{ number_format($orderTotal, 2) }}</span>
+                <div class="d-flex align-items-center gap-3">
+                    <h5 class="mb-0 text-white fw-bold">
+                        Q{{ number_format($orderTotal, 2) }}
                     </h5>
                     <button wire:click="finalizeOrder"
                             wire:loading.attr="disabled"
-                            class="btn btn-success">
+                            class="btn btn-light btn-sm px-4 fw-semibold">
                         <span wire:loading.remove wire:target="finalizeOrder">
-                            <i class="ri ri-check-double-line me-1"></i> Finalizar Orden
+                            <i class="ri ri-check-double-line me-1"></i> Finalizar
                         </span>
                         <span wire:loading wire:target="finalizeOrder">
                             <span class="spinner-border spinner-border-sm me-1"></span> Guardando...
@@ -28,90 +28,131 @@
         </div>
     @endif
 
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-            <h5 class="mb-0">Crear Venta</h5>
-            <div class="input-group mt-2 mt-sm-0" style="max-width: 300px;">
-                <span class="input-group-text">
-                    <i class="icon-base ri ri-search-line"></i>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center py-3 px-4">
+            <h5 class="mb-0 fw-bold">Crear Venta</h5>
+            <div class="input-group w-auto">
+                <span class="input-group-text bg-light border-0 rounded-start-3">
+                    <i class="ri ri-search-line text-muted"></i>
                 </span>
                 <input type="text"
-                       class="form-control"
+                       class="form-control border-0 bg-light rounded-end-3"
+                       style="min-width: 250px;"
                        wire:model.live.debounce.300ms="search"
                        placeholder="Buscar producto...">
             </div>
         </div>
 
-        <div class="card-body">
+        <div class="card-body p-4">
             @if (session()->has('message'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('message') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="alert alert-success border-0 shadow-sm mb-4 rounded-3 d-flex align-items-center" role="alert">
+                    <i class="ri ri-checkbox-circle-line me-2 fs-5"></i>
+                    <span>{{ session('message') }}</span>
                 </div>
             @endif
 
             @if($search && $products->isEmpty())
-                <div class="alert alert-danger">
-                    No se encontraron resultados para "{{ $search }}"
+                <div class="alert alert-warning border-0 shadow-sm rounded-3 d-flex align-items-center">
+                    <i class="ri ri-information-line me-2 fs-5"></i>
+                    <span>No se encontraron resultados para "{{ $search }}"</span>
                 </div>
             @endif
 
-            @foreach ($products as $category => $items)
-                <h5 class="mb-4 mt-2 border-bottom-0 pb-2 pt-2 px-3 text-uppercase text-white rounded shadow-sm"
-                    style="background: linear-gradient(90deg, #dc3545 0%, #ff4d6d 100%);">
-                    {{ $category ?? 'Sin categoría' }}
-                </h5>
-
-                <div class="row">
-                    @foreach ($items as $product)
-                        <div class="col-12 col-sm-6 col-md-4 col-lg-2 mb-4">
-                            <div class="card h-100 shadow-sm border-0">
+            <div class="row g-2">
+                @foreach ($products as $product)
+                    <div class="col-4 col-sm-3 col-md-2 col-lg-2 col-xl-15">
+                        <div class="card h-100 border-0 shadow-sm product-card rounded-3">
+                            
+                            <!-- Imagen del producto -->
+                            <div class="ratio ratio-1x1 rounded-top-3 overflow-hidden">
                                 @if($product->image)
                                     <img src="{{ asset('assets/json/products/' . $product->image) }}"
-                                         class="card-img-top w-100"
-                                         alt="{{ $product->description }}"
-                                         style="height: 200px; object-fit: contain;">
+                                        class="object-fit-cover"
+                                        alt="{{ $product->description }}">
                                 @else
-                                    <div class="bg-light d-flex align-items-center justify-content-center"
-                                         style="height: 200px;">
-                                        <i class="ri ri-image-line" style="font-size: 3rem; color: #ccc;"></i>
+                                    <div class="bg-light d-flex align-items-center justify-content-center">
+                                        <i class="ri ri-image-line display-4 text-muted opacity-25"></i>
                                     </div>
                                 @endif
+                            </div>
 
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title text-truncate mb-3">{{ $product->description }}</h5>
+                            <!-- Información del producto -->
+                            <div class="card-body p-2 d-flex flex-column">
+                                <h6 class="card-title mb-1 fw-semibold text-truncate" style="font-size: 0.75rem; line-height: 1.2;">
+                                    {{ $product->description }}
+                                </h6>
 
-                                    <div class="mt-auto">
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <span class="fw-bold text-dark">
-                                                Q{{ number_format($product->price, 2) }}
-                                            </span>
-                                        </div>
-
-                                        <div class="d-flex justify-content-center">
-                                            <button
-                                                wire:click="addProduct({{ $product->id }})"
-                                                wire:loading.attr="disabled"
-                                                wire:target="addProduct"
-                                                class="btn btn-danger w-100 mx-auto d-block">
-
-                                                <span wire:loading.remove wire:target="addProduct">
-                                                    <i class="ri ri-add-line me-1"></i> Agregar
-                                                </span>
-
-                                                <span wire:loading wire:target="addProduct">
-                                                    <span class="spinner-border spinner-border-sm me-1"></span>
-                                                    Agregando...
-                                                </span>
-                                            </button>
-                                        </div>
-                                    </div>
+                                <div class="mb-1">
+                                    <span class="fw-bold text-danger" style="font-size: 0.875rem;">
+                                        Q{{ number_format($product->price, 2) }}
+                                    </span>
                                 </div>
+
+                                <button
+                                    wire:click="addProduct({{ $product->id }})"
+                                    wire:loading.attr="disabled"
+                                    wire:target="addProduct"
+                                    class="btn btn-danger btn-sm w-100 rounded-2 fw-semibold mt-auto py-1"
+                                    style="font-size: 0.75rem;">
+
+                                    <span wire:loading.remove wire:target="addProduct">
+                                        <i class="ri ri-add-line"></i> Agregar
+                                    </span>
+
+                                    <span wire:loading wire:target="addProduct">
+                                        <span class="spinner-border spinner-border-sm"></span>
+                                    </span>
+                                </button>
                             </div>
                         </div>
-                    @endforeach
-                </div>
-            @endforeach
+                    </div>
+                @endforeach
+            </div>
         </div>
     </div>
+
+    <style>
+        /* Gradiente rojo para el resumen */
+        .bg-gradient {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+        }
+
+        /* Efectos hover con transiciones suaves */
+        .product-card {
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .product-card button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 .25rem .75rem rgba(220, 38, 38, 0.3);
+        }
+
+        .product-card button:active {
+            transform: scale(0.98);
+        }
+
+        /* Input focus personalizado */
+        .form-control:focus {
+            box-shadow: 0 0 0 0.25rem rgba(220, 38, 38, 0.15);
+            border-color: #ef4444 !important;
+        }
+
+        /* Optimización para pantallas pequeñas */
+        @media (max-width: 576px) {
+            .card-header .input-group {
+                width: 100% !important;
+                margin-top: 0.5rem;
+            }
+            
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+        }
+    </style>
 </div>

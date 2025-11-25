@@ -16,7 +16,7 @@ class DailySaleController extends Controller
      */
     public function index()
     {
-        $sales = DailySale::paginate(10);
+        $sales = DailySale::orderBy('id', 'desc')->paginate(10);
         return view('sales.index', compact('sales'));
     }
 
@@ -25,7 +25,7 @@ class DailySaleController extends Controller
      */
     public function create()
     {
-        $products = Product::with('category')->get()->groupBy('category.description');
+        $products = Product::all();
         $sellers = User::all();
         $paymentMethods = PaymentMethod::all();
         return view('sales.create', compact('products', 'sellers', 'paymentMethods'));

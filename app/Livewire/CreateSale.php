@@ -97,11 +97,11 @@ class CreateSale extends Component
             $this->orderTotal = 0;
             
             session()->flash('message', 'Orden finalizada y guardada correctamente.');
-            return redirect()->route('sales.index');
+            return redirect()->route('sales.create');
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('message', 'Error al guardar la orden: ' . $e->getMessage());
-            return redirect()->route('sales.index');
+            return redirect()->route('sales.create');
         }
     }
 
@@ -109,10 +109,7 @@ class CreateSale extends Component
     {
         $products = Product::when($this->search, function ($query) {
                 return $query->where('description', 'like', '%' . $this->search . '%');
-            })
-            ->with('category')
-            ->get()
-            ->groupBy(fn($p) => optional($p->category)->description ?? 'Sin categoría');
+            })->get();
 
         return view('livewire.create-sale', [
             'products' => $products,
